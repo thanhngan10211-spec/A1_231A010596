@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast; // Đã thêm import Toast để hết lỗi Cannot resolve symbol
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,18 +23,18 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "A1_231A010596";
 
     private TextView tvLog;
-    private TextView tvCounter; // Khai báo cho NC1
+    private TextView tvCounter;
     private final StringBuilder history = new StringBuilder();
     private int step = 0;
 
-    // NC1: Dùng LinkedHashMap để đếm số lần gọi mỗi callback
+    // NC1: Dùng LinkedHashMap để đếm số lần gọi từng callback
     private final Map<String, Integer> callbackCounts = new LinkedHashMap<>();
 
     private void logEvent(String event) {
         step++;
 
         // NC1: Cập nhật đếm số lần gọi callback
-        String callbackName = event.split(" ")[0]; // Lấy tên callback (onCreate, onStart,...)
+        String callbackName = event.split(" ")[0];
         int currentCount = callbackCounts.getOrDefault(callbackName, 0) + 1;
         callbackCounts.put(callbackName, currentCount);
         updateCounterDisplay();
@@ -70,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         tvLog = findViewById(R.id.tvLog);
-        tvCounter = findViewById(R.id.tvCounter); // Ánh xạ tvCounter (NC1)
+        tvCounter = findViewById(R.id.tvCounter);
         Button btnClear = findViewById(R.id.btnClear);
         Button btnCrash = findViewById(R.id.btnCrash);
         Button btnFinish = findViewById(R.id.btnFinish);
@@ -78,15 +79,21 @@ public class MainActivity extends AppCompatActivity {
         btnClear.setOnClickListener(v -> {
             history.setLength(0);
             step = 0;
-            callbackCounts.clear(); // NC1: Xóa bộ đếm khi bấm Xóa log
+            callbackCounts.clear();
             tvLog.setText("");
             tvCounter.setText("Số lần gọi: ");
             Log.i(TAG, "---- Đã xóa lịch sử ----");
         });
 
+        // NC2: Đã dùng try-catch bẫy lỗi NullPointerException & Toast
         btnCrash.setOnClickListener(v -> {
-            String ten = null;
-            Log.d(TAG, "Độ dài tên: " + ten.length());
+            try {
+                String ten = null;
+                Log.d(TAG, "Độ dài tên: " + ten.length());
+            } catch (NullPointerException e) {
+                Log.e(TAG, "Bắt được lỗi NullPointerException", e);
+                Toast.makeText(this, "Đã bắt lỗi: tên đang null!", Toast.LENGTH_SHORT).show();
+            }
         });
 
         btnFinish.setOnClickListener(v -> finish());
