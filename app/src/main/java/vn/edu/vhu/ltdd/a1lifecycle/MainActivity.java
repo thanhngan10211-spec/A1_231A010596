@@ -13,19 +13,31 @@ import androidx.core.view.WindowInsetsCompat;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "A1_231A010596";
 
     private TextView tvLog;
+    private TextView tvCounter; // Khai báo cho NC1
     private final StringBuilder history = new StringBuilder();
     private int step = 0;
 
-    /** Ghi một sự kiện ra Logcat và hiển thị lên màn hình. */
+    // NC1: Dùng LinkedHashMap để đếm số lần gọi mỗi callback
+    private final Map<String, Integer> callbackCounts = new LinkedHashMap<>();
+
     private void logEvent(String event) {
         step++;
+
+        // NC1: Cập nhật đếm số lần gọi callback
+        String callbackName = event.split(" ")[0]; // Lấy tên callback (onCreate, onStart,...)
+        int currentCount = callbackCounts.getOrDefault(callbackName, 0) + 1;
+        callbackCounts.put(callbackName, currentCount);
+        updateCounterDisplay();
+
         String time = new SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())
                 .format(new Date());
         String line = step + ". [" + time + "] " + event;
@@ -34,6 +46,16 @@ public class MainActivity extends AppCompatActivity {
         if (tvLog != null) {
             tvLog.setText(history);
         }
+    }
+
+    // NC1: Cập nhật chuỗi hiển thị bảng đếm
+    private void updateCounterDisplay() {
+        if (tvCounter == null) return;
+        StringBuilder sb = new StringBuilder("Số lần gọi: ");
+        for (Map.Entry<String, Integer> entry : callbackCounts.entrySet()) {
+            sb.append(entry.getKey()).append(": ").append(entry.getValue()).append(" | ");
+        }
+        tvCounter.setText(sb.toString());
     }
 
     @Override
@@ -48,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         tvLog = findViewById(R.id.tvLog);
+        tvCounter = findViewById(R.id.tvCounter); // Ánh xạ tvCounter (NC1)
         Button btnClear = findViewById(R.id.btnClear);
         Button btnCrash = findViewById(R.id.btnCrash);
         Button btnFinish = findViewById(R.id.btnFinish);
@@ -55,17 +78,17 @@ public class MainActivity extends AppCompatActivity {
         btnClear.setOnClickListener(v -> {
             history.setLength(0);
             step = 0;
+            callbackCounts.clear(); // NC1: Xóa bộ đếm khi bấm Xóa log
             tvLog.setText("");
+            tvCounter.setText("Số lần gọi: ");
             Log.i(TAG, "---- Đã xóa lịch sử ----");
         });
 
-        // Nút cố ý gây lỗi NullPointerException nguyên bản
         btnCrash.setOnClickListener(v -> {
             String ten = null;
             Log.d(TAG, "Độ dài tên: " + ten.length());
         });
 
-        // finish() để quan sát onDestroy
         btnFinish.setOnClickListener(v -> finish());
 
         String state = (savedInstanceState == null) ? "= null" : "!= null";
